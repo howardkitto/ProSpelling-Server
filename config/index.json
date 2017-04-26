@@ -1,0 +1,4 @@
+{
+  "dbUri": "mongodb://localhost/prospelling",
+  "jwtSecret": "sdfhslflsjflfjslfjsdlkfj"
+}
