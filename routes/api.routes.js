@@ -8,9 +8,9 @@ var getNextWord = require('../words/getNextWord')
 const router = new express.Router();
 
 
-function createNewChallenge(startingLevel){
+function createNewChallenge(startingLevel, getNextWordCallback){
 
-  const userUuid = uuid();
+  // const userUuid = uuid();
 
   const challenge = { user: uuid(),
                       startingLevel: startingLevel
@@ -19,9 +19,8 @@ function createNewChallenge(startingLevel){
   const newChallenge = new Challenges(challenge)
         newChallenge.save();
 
-  return ( {'challengeId':newChallenge._id, 
-            'userUuid' : newChallenge.user, 
-            'startingLevel':newChallenge.startingLevel})
+
+  return getNextWordCallback(newChallenge)
   }
 
 
@@ -31,8 +30,9 @@ router.route('/challenge')
 .post(function(req, res){
   console.log('Create new challenge ' + JSON.stringify(req.body.startingLevel))
 
-    
-    const newChallenge = createNewChallenge(JSON.stringify(req.body.startingLevel))
+  const level = JSON.stringify(req.body.startingLevel);
+
+  const newChallenge = createNewChallenge(level, getNextWord)
 
     console.log('newChallenge Function returned ' + newChallenge)
 
