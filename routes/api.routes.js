@@ -1,37 +1,54 @@
 const express = require('express');
 var Challenges = require('../models/Challenges');
 var Attempts = require('../models/Attempts');
+var Words = require('../models/Words');
 var uuid = require('uuid')
+var getNextWord = require('../words/getNextWord')
 
 const router = new express.Router();
 
-router.route('/')
+router.route('/challenge')
 
 .post(function(req, res){
+  console.log('Create new challenge ' + JSON.stringify(req.body.startingLevel))
 
-  const challenge = { user: uuid()}
+  const challenge = { user: uuid(),
+                      startingLevel:req.body.startingLevel
+                    }
     const newChallenge = new Challenges(challenge)
     newChallenge.save();
-  res.json({'challengeId':newChallenge._id, 'userId' : newChallenge.user})
+  res.json({'challengeId':newChallenge._id, 
+            'userUuid' : newChallenge.user, 
+            'startingLevel':newChallenge.startingLevel})
 });
 
 
-router.route('/question')
-.post(function(req, res){
+// router.route('/question')
+// .post(function(req, res){
 
-        console.log('get a new word for ' + JSON.stringify(req.body))
+//         const nextWord = getNextWord(req.body.level);
+
+//         // console.log('get a new word for ' + JSON.stringify(req.body))
+//         console.log('the next word is level' + req.body.level);
         
-        Challenges.findOneAndUpdate({'_id' : req.body.id},
-        {$push: {'question':{ 'questionId': uuid(),
-                          'word':req.body.word, //this is where the alogorithm goes
-                          'started_time': Date.now()
-                    }}},
-        function(err,data){
-          if(err){res.send(err)}
+//         Challenges.findOneAndUpdate({'_id' : req.body.id},
+//         {$push: {'question':{ 'questionId': uuid(),
+//                           'word':'monkey', //this is where the alogorithm goes
+//                           'started_time': Date.now()
+//                     }}},
+//         function(err,data){
+//           if(err){res.send(err)}
 
-          res.json({data})
-        });
- });
+//           res.json({data})
+//         });
+//  });
+
+// router.route('/getNextWord').post(function(req, res){
+//   console.log(' challengeId ' + req.body.challengeId +
+//                 ' startingLevel ' + req.body.startingLevel)
+
+//   res.json({word:'eagle'})
+// })
 
 router.route('/attempt')
 .post(function(req, res){
@@ -43,6 +60,24 @@ router.route('/attempt')
 
         const newAttempt = new Attempts(attempt)
         newAttempt.save(function(err,data){
+          if(err){res.send(err)}
+          res.json(data)})
+        
+ });
+
+//route for setting up new words
+ router.route('/word')
+.post(function(req, res){
+
+        console.log('make a word ' + JSON.stringify(req.body))
+
+        const word = { 'word':req.body.word,
+                          'level':req.body.level,
+                          'characteristics': req.body.characteristics
+                          }
+
+        const newWord = new Words(word)
+        newWord.save(function(err,data){
           if(err){res.send(err)}
           res.json(data)})
         

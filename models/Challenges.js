@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 // define the User model schema
 const  Challenges = new mongoose.Schema({
   user: {type: String, index: { unique: true }},
+  startingLevel: {type: String},
   question:{
     questionId: {type: String, index: { unique: true }},
     started_time: {type: Date},
