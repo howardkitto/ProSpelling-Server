@@ -1,4 +1,5 @@
 const express = require('express');
+const async = require('async')
 var Challenges = require('../models/Challenges');
 var Attempts = require('../models/Attempts');
 var Words = require('../models/Words');
@@ -8,64 +9,119 @@ var getNextWord = require('../words/getNextWord')
 const router = new express.Router();
 
 
-function createNewChallenge(startingLevel, getNextWordCallback){
-
-  // const userUuid = uuid();
-
-  const challenge = { user: uuid(),
-                      startingLevel: startingLevel
-                    }
-
-  const newChallenge = new Challenges(challenge)
-        newChallenge.save();
-
-
-  return getNextWordCallback(newChallenge)
-  }
-
-
-
 router.route('/challenge')
-
 .post(function(req, res){
-  console.log('Create new challenge ' + JSON.stringify(req.body.startingLevel))
+  
+  var challengeDetails = {};
+  var startingLevel = req.body.startingLevel;
 
-  const level = JSON.stringify(req.body.startingLevel);
+  async.series([
+    function(callback){
+        // console.log('Init Challenge, first as sync ' + startingLevel)
+        const challenge = { user: uuid(),
+                            startingLevel: startingLevel
+                          }
 
-  const newChallenge = createNewChallenge(level, getNextWord)
+        const newChallenge = new Challenges(challenge)
+              newChallenge.save(
+                function(err, users){
+                  if (err) return callback(err);
+                  challengeDetails = newChallenge
+                  // console.log('challengeDetails ' + JSON.stringify(challengeDetails))
+                  callback();
+                });
+                
+                // callback();
+          },
+    function(callback){
+          // console.log('second async function')
 
-    console.log('newChallenge Function returned ' + newChallenge)
+    //go to the database and count all the words with the right level
+        Words.count({'level':startingLevel},
+            function (err,c){
+            if(err){return err}
+            console.log('Count is ' + c)
 
-    res.json(newChallenge)
-});
+    // generate a random number to select a word        
+            const wordNumber = Math.floor((Math.random() * c) + 1);
+            console.log('word number ' + wordNumber)
+            //find the word that corresponds to the random number
+            Words.findOne().skip(wordNumber).exec(
+        function (err, word) {
+            // console.log('second async found ' + word.word)
+            challengeDetails.word = word.word
+            
+            callback();
+        })
+        });
+      },
+    function(callback){
+      // insert row
+      // console.log('third async - insert question ' + challengeDetails.id)
+      Challenges.findOneAndUpdate({'_id' : challengeDetails.id},
+        {$push: {'question':{ 'questionId': uuid(),
+                              'word':challengeDetails.word,
+                              'started_time': Date.now()
+                    }}},
+        function(err,data){
+          if(err){res.send(err)}
 
+          // console.log('insert question '+data)
+        callback();}
+        );
+    },
+    function(callback){
+      // console.log('fourth async function ' + typeof(challengeDetails) + ' ' + challengeDetails)
+          res.json({challengeId: challengeDetails._id,
+                   word: challengeDetails.word,
+                  startingLevel: challengeDetails.startingLevel})  
+          callback();
+    }
+        ]);
+  }
+);
 
-// router.route('/question')
-// .post(function(req, res){
+router.route('/nextWord')
+.post(function(req, res){
 
-//         const nextWord = getNextWord(req.body.level);
+var newQuestion = {};
 
-//         // console.log('get a new word for ' + JSON.stringify(req.body))
-//         console.log('the next word is level' + req.body.level);
-        
-//         Challenges.findOneAndUpdate({'_id' : req.body.id},
-//         {$push: {'question':{ 'questionId': uuid(),
-//                           'word':'monkey', //this is where the alogorithm goes
-//                           'started_time': Date.now()
-//                     }}},
-//         function(err,data){
-//           if(err){res.send(err)}
+async.series([
+ function(callback){
+    Challenges.findById(req.body.challengeId, function(err, challenge){
+          console.log('step 1: level = ' + challenge.startingLevel)
+          newQuestion.level = challenge.startingLevel
+          
+           callback(null, challenge.startingLevel);
+      
+     })
+  },
+  function(callback){
+    
+      // getNextWord(newQuestion.level, ()=>callback())
+      function getWordBack(word){
+        console.log('callback function ' + word);
+        newQuestion.word = word;
+        callback(null, word.word);
 
-//           res.json({data})
-//         });
-//  });
+      }
 
-// router.route('/getNextWord').post(function(req, res){
-//   console.log(' challengeId ' + req.body.challengeId +
-//                 ' startingLevel ' + req.body.startingLevel)
+      var nextWord = getNextWord(newQuestion.level, (word) => getWordBack(word))
 
-//   res.json({word:'eagle'})
-// })
+  },
+
+  function(callback){
+    console.log('Step 5: send back the answer')
+    res.json({level: newQuestion.level,
+              word: newQuestion.word.word})
+    callback(null, 'three');
+  }],
+  function(err, results){
+    console.log(results)
+  }
+  );
+
+ });
 
 router.route('/attempt')
 .post(function(req, res){
