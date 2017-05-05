@@ -15,6 +15,7 @@ router.route('/challenge')
   var challengeDetails = {};
   var startingLevel = req.body.startingLevel;
 
+//WASTED HOURS learning async
   async.series([
     function(callback){
         // console.log('Init Challenge, first as sync ' + startingLevel)
@@ -34,26 +35,17 @@ router.route('/challenge')
                 // callback();
           },
     function(callback){
-          // console.log('second async function')
+          
+      //WASTED many hours on how to get this call back to work!!
+      function getWordBack(word){
+        challengeDetails.word = word.word;
+        callback();
 
-    //go to the database and count all the words with the right level
-        Words.count({'level':startingLevel},
-            function (err,c){
-            if(err){return err}
-            console.log('Count is ' + c)
+      }
+      console.log()
+  //I've hardcoded the assessment number here    
+      var nextWord = getNextWord(challengeDetails.startingLevel, 1, (word) => getWordBack(word))
 
-    // generate a random number to select a word        
-            const wordNumber = Math.floor((Math.random() * c) + 1);
-            console.log('word number ' + wordNumber)
-            //find the word that corresponds to the random number
-            Words.findOne().skip(wordNumber).exec(
-        function (err, word) {
-            // console.log('second async found ' + word.word)
-            challengeDetails.word = word.word
-            
-            callback();
-        })
-        });
       },
     function(callback){
       // insert row
@@ -86,39 +78,79 @@ router.route('/nextWord')
 
 var newQuestion = {};
 
+
 async.series([
  function(callback){
+  //  console.log('step 1: level = ' + req.body.challengeId)
+   
     Challenges.findById(req.body.challengeId, function(err, challenge){
-          console.log('step 1: level = ' + challenge.startingLevel)
+          
+          newQuestion.challengeId = challenge._id,
           newQuestion.level = challenge.startingLevel
           
            callback(null, challenge.startingLevel);
       
      })
   },
-  function(callback){
+    function(callback){
+
+    //WASTED HOURS ON THIS! Needed to use lean()
+
+    var query = Challenges.findOne({"_id":newQuestion.challengeId}).select('question.word').lean()
     
-      // getNextWord(newQuestion.level, ()=>callback())
+    query.exec(function (err, questions){
+
+    var questionsNoDate = questions.question
+
+   newQuestion.previousWords = questionsNoDate.map(function(x){
+  return x["word"];
+});
+
+// var result = Array.prototype.slice.call(questionsNoDate, 1)
+console.log(newQuestion.previousWords);
+
+      callback(null, 'two')
+
+    })    
+
+  },
+  function(callback){
+    //spent many hours on how to get this call back to work!!
       function getWordBack(word){
-        console.log('callback function ' + word);
-        newQuestion.word = word;
+        newQuestion.word = word.word;
         callback(null, word.word);
 
       }
 
-      var nextWord = getNextWord(newQuestion.level, (word) => getWordBack(word))
+      var nextWord = getNextWord( newQuestion.level,
+                                  newQuestion.previousWords,
+                                   1, (word) => getWordBack(word))
 
   },
+  function(callback){
+      // insert row
+      console.log('step 3: - insert question ' + newQuestion.challengeId)
+      Challenges.findOneAndUpdate({'_id' : newQuestion.challengeId},
+        {$push: {'question':{ 'questionId': uuid(),
+                              'word':newQuestion.word,
+                              'started_time': Date.now()
+                    }}},
+        function(err,data){
+          if(err){res.send(err)}
+
+          // console.log('insert question '+data)
+        callback(null, newQuestion.id );}
+        );
+    },
 
   function(callback){
     console.log('Step 5: send back the answer')
-    res.json({level: newQuestion.level,
-              word: newQuestion.word.word})
+    // res.json({challengeId: newQuestion.challengeId,
+    
+    res.json(newQuestion)
+
     callback(null, 'three');
-  }],
-  function(err, results){
-    console.log(results)
-  }
+  }]
   );
 
  });
@@ -139,13 +171,14 @@ router.route('/attempt')
  });
 
 //route for setting up new words
- router.route('/word')
+ router.route('/newWord')
 .post(function(req, res){
 
         console.log('make a word ' + JSON.stringify(req.body))
 
-        const word = { 'word':req.body.word,
+        const word = {    'word':req.body.word,
                           'level':req.body.level,
+                          'assesment':req.body.assesment,
                           'characteristics': req.body.characteristics
                           }
 
