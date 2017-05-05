@@ -131,6 +131,12 @@ console.log(newQuestion.previousWords);
 
   },
   function(callback){
+
+    if(!newQuestion.word){console.log('game over')
+    //this is where we send back the score, probably break this into a new async function
+    res.json({'status':'end of test'}
+    )}
+    else{
       // insert row
       console.log('step 3: - insert question ' + newQuestion.challengeId)
       Challenges.findOneAndUpdate({'_id' : newQuestion.challengeId},
@@ -143,7 +149,7 @@ console.log(newQuestion.previousWords);
 
           // console.log('insert question '+data)
         callback(null, newQuestion.id );}
-        );
+        );}
     },
 
   function(callback){
