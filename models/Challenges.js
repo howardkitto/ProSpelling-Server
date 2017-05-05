@@ -3,13 +3,14 @@ const mongoose = require('mongoose');
 
 // define the User model schema
 const  Challenges = new mongoose.Schema({
-  user: {type: String, index: { unique: true }},
-  startingLevel: {type: String},
+  // user: {type: String, index: { unique: true }},
+  user: {type: String},
+  assessmentLevel: {type: String},
   question:{
     questionId: {type: String, index: { unique: true }},
     started_time: {type: Date},
     word :{type: String}
   }
-}, {timestamps:{}} );
+}, {timestamps:{}} ); 
 
 module.exports = mongoose.model('Challenges', Challenges);

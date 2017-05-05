@@ -13,29 +13,32 @@ router.route('/challenge')
 .post(function(req, res){
   
   var challengeDetails = {};
-  var startingLevel = req.body.startingLevel;
+  var assessmentLevel = req.body.assessmentLevel;
 
 //WASTED HOURS learning async
   async.series([
     function(callback){
-        // console.log('Init Challenge, first as sync ' + startingLevel)
-        const challenge = { user: uuid(),
-                            startingLevel: startingLevel
+        console.log('FIRST ASYNC: assessment level = ' + assessmentLevel)
+        const assessment = { user: uuid(),
+                            assessmentLevel: assessmentLevel
                           }
 
-        const newChallenge = new Challenges(challenge)
-              newChallenge.save(
+        const newassessment = new Challenges(assessment)
+              newassessment.save(
                 function(err, users){
-                  if (err) return callback(err);
-                  challengeDetails = newChallenge
+                  if (err) 
+                  {console.log(err)
+                    return callback(err);}
+                  challengeDetails = newassessment
                   // console.log('challengeDetails ' + JSON.stringify(challengeDetails))
                   callback();
                 });
-                
-                // callback();
           },
     function(callback){
-          
+    
+    console.log('SECOND ASYNC: assessment level = ' + challengeDetails.assessmentLevel)
+      var previousWords = []
+      
       //WASTED many hours on how to get this call back to work!!
       function getWordBack(word){
         challengeDetails.word = word.word;
@@ -44,7 +47,7 @@ router.route('/challenge')
       }
       console.log()
   //I've hardcoded the assessment number here    
-      var nextWord = getNextWord(challengeDetails.startingLevel, 1, (word) => getWordBack(word))
+      var nextWord = getNextWord(challengeDetails.assessmentLevel, previousWords, (word) => getWordBack(word))
 
       },
     function(callback){
@@ -66,7 +69,7 @@ router.route('/challenge')
       // console.log('fourth async function ' + typeof(challengeDetails) + ' ' + challengeDetails)
           res.json({challengeId: challengeDetails._id,
                    word: challengeDetails.word,
-                  startingLevel: challengeDetails.startingLevel})  
+                  assessmentLevel: challengeDetails.assessmentLevel})  
           callback();
     }
         ]);
@@ -86,9 +89,9 @@ async.series([
     Challenges.findById(req.body.challengeId, function(err, challenge){
           
           newQuestion.challengeId = challenge._id,
-          newQuestion.level = challenge.startingLevel
+          newQuestion.assessmentLevel = challenge.assessmentLevel
           
-           callback(null, challenge.startingLevel);
+           callback(null, challenge.assessmentLevel);
       
      })
   },
@@ -122,9 +125,9 @@ console.log(newQuestion.previousWords);
 
       }
 
-      var nextWord = getNextWord( newQuestion.level,
+      var nextWord = getNextWord( newQuestion.assessmentLevel,
                                   newQuestion.previousWords,
-                                   1, (word) => getWordBack(word))
+                                  (word) => getWordBack(word))
 
   },
   function(callback){

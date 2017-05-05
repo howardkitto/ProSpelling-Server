@@ -1,31 +1,27 @@
 const Words = require('../models/Words')
 
-function getNextWord(   level,
+function getNextWord(   assessmentLevel,
                         previousWords,
-                        assesment, getWordBack){
+                        getWordBack){
+
+console.log('getNextWord ')
+console.log('assessmentLevel ' + assessmentLevel)
+var previousWordCount = previousWords.length
+console.log('previousWordCount = ' + previousWordCount)
 
 
-// console.log('getNextWord ' )
-
-
-
-
-Words.find({"assesment": assesment}, function(err, availiableWords){
-
-    var wordsDone = previousWords.length
-    var wordsReady = availiableWords.length
-    var wordsLeft =  wordsReady - wordsDone                   
-
-    // console.log('words left ' + wordsDone + ' ' + wordsReady) 
-    console.log('words left ' + wordsLeft)
-
-    // if(availiableWords.length === previousWords.length){return false}
-
+Words.find({"assesment": assessmentLevel}, function(err, availiableWords){
+    if(err){console.log(err)}
+    var availiableWordCount = availiableWords.length
+    var wordsInTest = availiableWordCount - previousWordCount
     
-    const c = availiableWords.length
-    const wordNumber = Math.floor((Math.random() * c) + 1);
-         getWordBack(availiableWords[wordNumber])
+    const wordNumber = Math.floor((Math.random() * wordsInTest) + 1);
+    getWordBack(availiableWords[wordNumber])
+
+
+
 })
+
 
 
 }
