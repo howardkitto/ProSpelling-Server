@@ -12,5 +12,5 @@ module.exports.connect = (uri) => {
   });
 
   // load models
-  require('./Challenges');
+  require('./Assessments');
 };

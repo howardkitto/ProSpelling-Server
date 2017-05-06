@@ -2,6 +2,7 @@ var express = require('express')
 var bodyParser = require('body-parser');
 const cors = require('cors');
 var api = require('../routes/api.routes');
+var answerRoute = require('../routes/answerRoute')
 var app = express()
 
 //CORS ** Don't forget to replace the URL of the app
@@ -19,6 +20,7 @@ app.use(bodyParser.json());
 app.use(cors())
 app.use(express.static('public'))
 app.use('/api', api);
+app.use('/api/answer', answerRoute)
 
 app.get('/', function (req, res) {
   res.send('Hello World!')

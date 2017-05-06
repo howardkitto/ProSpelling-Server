@@ -1,80 +1,53 @@
 const express = require('express');
 const async = require('async')
-var Challenges = require('../models/Challenges');
-var Attempts = require('../models/Attempts');
+var Assessments = require('../models/Assessments');
 var Words = require('../models/Words');
 var uuid = require('uuid')
 var getNextWord = require('../words/getNextWord')
+var assessmentLogic = require('../words/assessmentLogic')
 
 const router = new express.Router();
 
 
-router.route('/challenge')
+router.route('/newAssessment')
 .post(function(req, res){
+  console.log('ROUTE got ' + JSON.stringify(req.body))
+  var nextWord = {assessmentId:'',
+                  userId:'',
+                  assessmentLevel:''};
+
+  const assessment = { userId: uuid(),
+                       assessmentLevel: req.body.assessmentLevel
+                     }
   
-  var challengeDetails = {};
-  var assessmentLevel = req.body.assessmentLevel;
+  const newassessment = new Assessments(assessment)
 
-//WASTED HOURS learning async
-  async.series([
-    function(callback){
-        console.log('FIRST ASYNC: assessment level = ' + assessmentLevel)
-        const assessment = { user: uuid(),
-                            assessmentLevel: assessmentLevel
-                          }
-
-        const newassessment = new Challenges(assessment)
-              newassessment.save(
-                function(err, users){
+              newassessment.save(function(err, data){
                   if (err) 
                   {console.log(err)
                     return callback(err);}
-                  challengeDetails = newassessment
-                  // console.log('challengeDetails ' + JSON.stringify(challengeDetails))
-                  callback();
+
+                  nextWord.assessmentId = newassessment._id;
+                  nextWord.userId = newassessment.userId;
+                  nextWord.assessmentLevel = newassessment.assessmentLevel;
+
+                  console.log('nextWord ' + JSON.stringify(nextWord))
+
+  //call assessment logic
+
+ nextWord = assessmentLogic(nextWord, (nextWord)=>{
+   console.log('callback ' + JSON.stringify(nextWord))
+   res.json(nextWord)
+  })        
                 });
-          },
-    function(callback){
-    
-    console.log('SECOND ASYNC: assessment level = ' + challengeDetails.assessmentLevel)
-      var previousWords = []
-      
-      //WASTED many hours on how to get this call back to work!!
-      function getWordBack(word){
-        challengeDetails.word = word.word;
-        callback();
 
-      }
-      console.log()
-  //I've hardcoded the assessment number here    
-      var nextWord = getNextWord(challengeDetails.assessmentLevel, previousWords, (word) => getWordBack(word))
+          
 
-      },
-    function(callback){
-      // insert row
-      // console.log('third async - insert question ' + challengeDetails.id)
-      Challenges.findOneAndUpdate({'_id' : challengeDetails.id},
-        {$push: {'question':{ 'questionId': uuid(),
-                              'word':challengeDetails.word,
-                              'started_time': Date.now()
-                    }}},
-        function(err,data){
-          if(err){res.send(err)}
 
-          // console.log('insert question '+data)
-        callback();}
-        );
-    },
-    function(callback){
-      // console.log('fourth async function ' + typeof(challengeDetails) + ' ' + challengeDetails)
-          res.json({challengeId: challengeDetails._id,
-                   word: challengeDetails.word,
-                  assessmentLevel: challengeDetails.assessmentLevel})  
-          callback();
-    }
-        ]);
-  }
-);
+
+});
+
+
 
 router.route('/nextWord')
 .post(function(req, res){
