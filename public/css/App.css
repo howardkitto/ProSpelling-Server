@@ -1,0 +1,29 @@
+.wordEntryBoxDefault{
+
+  background-color: lightgray;
+  width: 300px;
+  border: 2px;
+  font-size: 200%;
+  font-family: cursive;
+  padding: 10px;
+}
+
+.wordEntryBoxWrong{
+
+  background-color: pink;
+  width: 300px;
+  border: 2px;
+  font-size: 200%;
+  font-family: cursive;
+  padding: 10px;
+}
+
+.wordEntryBoxCorrect{
+
+  background-color: lightgreen;
+  width: 300px;
+  border: 2px;
+  font-size: 200%;
+  font-family: cursive;
+  padding: 10px;
+}
