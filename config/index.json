@@ -1,4 +1,12 @@
-{
-  "dbUri": "mongodb://localhost/prospelling",
-  "jwtSecret": "sdfhslflsjflfjslfjsdlkfj"
-}
+// {
+//   "dbUri": "mongodb://localhost/prospelling",
+//   "options": {
+//     "user":"proSpellingAppConnectionUser",
+//     "pass":"9fc16393-20cb-4372-acd5-52d8b01be936"
+//   }
+// }
+
+
+// {
+//   "dbUri" : "mongodb://kay:myRealPassword@mycluster0-shard-00-00-wpeiv.mongodb.net:27017,mycluster0-shard-00-01-wpeiv.mongodb.net:27017,mycluster0-shard-00-02-wpeiv.mongodb.net:27017/admin?ssl=true&replicaSet=Mycluster0-shard-0&authSource=admin"
+// }

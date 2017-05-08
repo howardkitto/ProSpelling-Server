@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+
 module.exports.connect = (uri) => {
   mongoose.connect(uri);
   // plug in the promise library:
@@ -12,5 +13,5 @@ module.exports.connect = (uri) => {
   });
 
   // load models
-  require('./Challenges');
+  require('./Assessments');
 };
