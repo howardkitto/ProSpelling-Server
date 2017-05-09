@@ -3,15 +3,13 @@
 # dependencies
 /node_modules
 
-#AudioFiles
-
-/public/AudioFiles
 
 # misc
 .DS_Store
 .env
 npm-debug.log*
 Icon
+/.vscode
 
 
 # Elastic Beanstalk Files
