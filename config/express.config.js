@@ -20,9 +20,16 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors())
 app.use(express.static('public'))
+
+// app.use('/public', express.static(__dirname + '/public'));
 app.use('/api/newAssessment', newAssessment);
 app.use('/api/answer', answerRoute)
 app.use('/api/newWord', newWord)
+
+app.get("/*", function(req, res)
+{
+    res.sendFile("index.html", {"root": "public"});
+});
 
 // app.get('/', function (req, res) {
 //   res.send('Hello World!')
