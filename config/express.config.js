@@ -24,8 +24,8 @@ app.use('/api/newAssessment', newAssessment);
 app.use('/api/answer', answerRoute)
 app.use('/api/newWord', newWord)
 
-app.get('/', function (req, res) {
-  res.send('Hello World!')
-});
+// app.get('/', function (req, res) {
+//   res.send('Hello World!')
+// });
 
 module.exports = {app}
